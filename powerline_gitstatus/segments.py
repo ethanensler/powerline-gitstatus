@@ -77,7 +77,7 @@ class GitStatusSegment(Segment):
 
         return (staged, unmerged, changed, untracked)
 
-    def build_segments(self, branch, detached, tag, behind, ahead, staged, unmerged, changed, untracked, stashed):
+    def build_segments(self, branch, detached, tag, behind, ahead, staged, unmerged, changed, untracked, stashed, pair_status):
         if detached:
             branch_group = 'gitstatus_branch_detached'
         elif staged or unmerged or changed or untracked:
@@ -105,6 +105,8 @@ class GitStatusSegment(Segment):
             segments.append({'contents': ' … %d' % untracked, 'highlight_groups': ['gitstatus_untracked', 'gitstatus'], 'divider_highlight_group': 'gitstatus:divider'})
         if stashed:
             segments.append({'contents': ' ⚑ %d' % stashed, 'highlight_groups': ['gitstatus_stashed', 'gitstatus'], 'divider_highlight_group': 'gitstatus:divider'})
+        if pair_status:
+            segments.append({'contents': '%s' % pair_status, 'highlight_groups': ['gitstatus_pair_status', 'gitstatus'], 'divider_highlight_group': 'gitstatus:divider'})
 
         return segments
 
@@ -138,6 +140,8 @@ class GitStatusSegment(Segment):
 
         stashed = len(self.execute(pl, base + ['stash', 'list', '--no-decorate'])[0])
 
+        pair_status = self.execute(pl, base + ['config', '--get', 'user.initials'])
+
         if show_tag:
             tag, err = self.execute(pl, base + ['describe', '--tags', '--abbrev=0'])
 
@@ -148,7 +152,7 @@ class GitStatusSegment(Segment):
         else:
             tag = ''
 
-        return self.build_segments(branch, detached, tag, behind, ahead, staged, unmerged, changed, untracked, stashed)
+        return self.build_segments(branch, detached, tag, behind, ahead, staged, unmerged, changed, untracked, stashed, pair_status)
 
 
 gitstatus = with_docstring(GitStatusSegment(),
